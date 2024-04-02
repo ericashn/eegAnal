@@ -9,23 +9,13 @@ library(tidyverse)
 library(tidymodels)
 library(dplyr)
 library(stringr)
+library(corrplot)
 ```
 
 ```{r, echo = FALSE, results='hide'}
 #| label: read-files
 anova <- read.csv("anova_data.csv")
 nyc <- read.csv("nyc_data_scored.csv")
-```
-
-```{r, echo = FALSE, results='hide'}
-#|label: anova-wrangle
-
-anova |>
-  group_by(participants)|>
-  count(microstate, condition)|>
-  ungroup()
-
-  # mutate(p = n/sum(n))
 ```
 
 ```{r, echo = FALSE, results='hide'}
@@ -73,5 +63,67 @@ ggplot(nyc_long, aes(x = name, y = value, fill = group)) +
 ```
 
 ```{r}
-#| label: mass-corre
+#| label: merged-medrest
+merged_wide <- pivot_wider(merged, names_from = "microstate", values_from = "coverage")
+
+merged_med <- filter(merged_wide, condition == "med")
+merged_rest <- filter(merged_wide, condition == "rest")
+
+
+```
+
+```{r}
+#|label: correlation-matrix-med
+
+correlation_matrix <- cor(merged_med[, c("past_med", "positive_med", "future_med", "negative_med", "friends_med", "A", "B", "C", "D", "F")])
+
+tidy(correlation_matrix)
+corrplot(correlation_matrix, method = "color")
+```
+
+```{r}
+#|label: correlation-matrix-rest
+
+correlation_matrix <- cor(merged_rest[, c("past_rest", "positive_rest", "future_rest", "negative_rest", "friends_rest", "A", "B", "C", "D", "F")])
+
+tidy(correlation_matrix)
+corrplot(correlation_matrix, method = "color")
+```
+
+```{r}
+
+mednyc_col <- c("past_med", "positive_med", "future_med", "negative_med", "friends_med")
+
+# List of coverage columns
+medcoverage_col <- c("A", "B", "C", "D", "F")
+
+results <- matrix(NA, nrow = length(mednyc_col), ncol = length(medcoverage_col))
+
+# Iterate over each pair of variables and calculate the correlation
+for (i in seq_along(mednyc_col)) {
+  for (j in seq_along(medcoverage_col)) {
+    # Calculate correlation coefficient
+    result <- cor.test(merged_med[[mednyc_col[i]]], merged_med[[medcoverage_col[j]]])
+    # Store the correlation coefficient in the results matrix
+    results[i, j] <- result$estimate
+  }
+}
+
+# Convert results matrix into a data frame
+results_df <- as.data.frame(results)
+
+# Add row names (mednyc_col) and column names (medcoverage_col)
+rownames(results_df) <- mednyc_col
+colnames(results_df) <- medcoverage_col
+
+results_df
+```
+
+```{r}
+
+
+```
+
+```{r}
+
 ```
