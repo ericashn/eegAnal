@@ -42,14 +42,14 @@ merged = merge(x = anova, y = nyc, by.x = "participants", by.y = "koru_id")
 # nyc_rest = nyc|>
 #   filter(condition)
 
-filtered_med <- grep("_med$|koru_id$", names(nyc), value = TRUE)
-nyc_med <- nyc[, filtered_med]
-
-filtered_rest <- grep("_rest$|koru_id$", names(nyc), value = TRUE)
-nyc_rest <- nyc[, filtered_rest]
-
-med_long <- pivot_longer(nyc_med, cols = -koru_id)
-
+# filtered_med <- grep("_med$|koru_id$", names(nyc), value = TRUE)
+# nyc_med <- nyc[, filtered_med]
+# 
+# filtered_rest <- grep("_rest$|koru_id$", names(nyc), value = TRUE)
+# nyc_rest <- nyc[, filtered_rest]
+# 
+# med_long <- pivot_longer(nyc_med, cols = -koru_id)
+# 
 
 # ggplot(med_long, aes(x = name, y = value)) +
 #   geom_bar(stat = "identity", position = "dodge") +
@@ -70,4 +70,8 @@ ggplot(nyc_long, aes(x = name, y = value, fill = group)) +
   labs(title = "Bar Plot of Columns",
        x = "Columns", y = "Values") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+#| label: mass-corre
 ```
