@@ -57,8 +57,8 @@ nyc_long$group <- ifelse(grepl("_med$", nyc_long$name), "_med", "_rest")
 
 ggplot(nyc_long, aes(x = name, y = value, fill = group)) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Bar Plot of Columns",
-       x = "Columns", y = "Values") +
+  labs(title = "NYC Survey Results",
+       x = "Question Types", y = "Scores") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
@@ -70,6 +70,27 @@ merged_med <- filter(merged_wide, condition == "med")
 merged_rest <- filter(merged_wide, condition == "rest")
 
 
+```
+
+```{r, echo = FALSE}
+# ggplot(anova, aes(x = microstate, y = coverage, color = condition)) +
+#   geom_point(alpha = 0.5) +
+#   labs(title = "Microstate vs. Coverage",
+#        x = "Microstate",
+#        y = "Coverage")
+```
+
+```{r, echo = FALSE}
+average_coverage <- aggregate(coverage ~ microstate + condition, anova, mean)
+
+# Create the bar chart
+ggplot(average_coverage, aes(x = microstate, y = coverage, fill = condition)) +
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.5) +
+  labs(title = "Average Coverage by Microstate and Condition",
+       x = "Microstate",
+       y = "Average Coverage",
+       fill = "Condition") +
+  scale_fill_manual(values = c("med" = "blue", "rest" = "red"))
 ```
 
 Correlation Matrix for Meditation:
