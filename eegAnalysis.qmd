@@ -47,9 +47,9 @@ merged = merge(x = anova, y = nyc, by.x = "participants", by.y = "koru_id")
 #        x = "Columns", y = "Values") 
 ```
 
-everything in nyc
+nyc surveys:
 
-```{r}
+```{r echo = FALSE}
 nyc_long <- pivot_longer(nyc, cols = -koru_id)
 
 
@@ -62,7 +62,7 @@ ggplot(nyc_long, aes(x = name, y = value, fill = group)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r}
+```{r echo = FALSE}
 #| label: merged-medrest
 merged_wide <- pivot_wider(merged, names_from = "microstate", values_from = "coverage")
 
@@ -72,56 +72,180 @@ merged_rest <- filter(merged_wide, condition == "rest")
 
 ```
 
-```{r}
+Correlation Matrix for Meditation:
+
+```{r echo = FALSE}
 #|label: correlation-matrix-med
 
 correlation_matrix <- cor(merged_med[, c("past_med", "positive_med", "future_med", "negative_med", "friends_med", "A", "B", "C", "D", "F")])
 
-tidy(correlation_matrix)
 corrplot(correlation_matrix, method = "color")
 ```
 
-```{r}
+Correlation Matrix for Rest:
+
+```{r echo = FALSE}
 #|label: correlation-matrix-rest
 
 correlation_matrix <- cor(merged_rest[, c("past_rest", "positive_rest", "future_rest", "negative_rest", "friends_rest", "A", "B", "C", "D", "F")])
 
-tidy(correlation_matrix)
 corrplot(correlation_matrix, method = "color")
 ```
 
-```{r}
+Correlation Coefficients for Meditation:
 
+```{r echo = FALSE}
+#| label: merged-med-correlation-table
 mednyc_col <- c("past_med", "positive_med", "future_med", "negative_med", "friends_med")
 
 # List of coverage columns
 medcoverage_col <- c("A", "B", "C", "D", "F")
 
-results <- matrix(NA, nrow = length(mednyc_col), ncol = length(medcoverage_col))
+mresults <- matrix(NA, nrow = length(mednyc_col), ncol = length(medcoverage_col))
 
 # Iterate over each pair of variables and calculate the correlation
 for (i in seq_along(mednyc_col)) {
   for (j in seq_along(medcoverage_col)) {
     # Calculate correlation coefficient
-    result <- cor.test(merged_med[[mednyc_col[i]]], merged_med[[medcoverage_col[j]]])
+    mresult <- cor.test(merged_med[[mednyc_col[i]]], merged_med[[medcoverage_col[j]]])
     # Store the correlation coefficient in the results matrix
-    results[i, j] <- result$estimate
+    mresults[i, j] <- mresult$estimate
   }
 }
 
 # Convert results matrix into a data frame
-results_df <- as.data.frame(results)
+mresults_df <- as.data.frame(mresults)
 
 # Add row names (mednyc_col) and column names (medcoverage_col)
-rownames(results_df) <- mednyc_col
-colnames(results_df) <- medcoverage_col
+rownames(mresults_df) <- mednyc_col
+colnames(mresults_df) <- medcoverage_col
+
+mresults_df
+```
+
+Correlation Coefficients for Rest:
+
+```{r echo = FALSE}
+#| label: merged-rest-correlation-table
+restnyc_col <- c("past_rest", "positive_rest", "future_rest", "negative_rest", "friends_rest")
+
+# List of coverage columns
+restcoverage_col <- c("A", "B", "C", "D", "F")
+
+restresults <- matrix(NA, nrow = length(restnyc_col), ncol = length(restcoverage_col))
+
+# Iterate over each pair of variables and calculate the correlation
+for (i in seq_along(restnyc_col)) {
+  for (j in seq_along(restcoverage_col)) {
+    # Calculate correlation coefficient
+    restresult <- cor.test(merged_rest[[restnyc_col[i]]], merged_rest[[restcoverage_col[j]]])
+    # Store the correlation coefficient in the results matrix
+    restresults[i, j] <- restresult$estimate
+  }
+}
+
+# Convert results matrix into a data frame
+restresults_df <- as.data.frame(restresults)
+
+# Add row names (mednyc_col) and column names (medcoverage_col)
+rownames(restresults_df) <- mednyc_col
+colnames(restresults_df) <- medcoverage_col
+
+restresults_df
+
+```
+
+```{r echo = FALSE}
+# results_list <- vector("list", length = length(mednyc_col))
+# 
+# # Iterate over each pair of variables and calculate the correlation
+# for (i in seq_along(mednyc_col)) {
+#   results_list[[i]] <- vector("list", length = length(medcoverage_col))
+#   for (j in seq_along(medcoverage_col)) {
+#     # Calculate correlation coefficient
+#     result <- cor.test(merged_med[[mednyc_col[i]]], merged_med[[medcoverage_col[j]]])
+#     # Store the correlation coefficient and confidence interval in the results list
+#     results_list[[i]][[j]] <- list(
+#       correlation_coefficient = result$estimate,
+#       p_value = result$p.value,
+#       confidence_interval = result$conf.int
+#     )
+#   }
+# }
+# 
+
+```
+
+P-values for Meditation:
+
+```{r echo = FALSE}
+results_df <- data.frame(
+  mednyc_col = character(),
+  medcoverage_col = character(),
+  correlation_coefficient = numeric(),
+  p_value = numeric(),
+  confidence_interval_lower = numeric(),
+  confidence_interval_upper = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Populate the data frame with results
+for (i in seq_along(mednyc_col)) {
+  for (j in seq_along(medcoverage_col)) {
+    # Calculate correlation coefficient
+    result <- cor.test(merged_med[[mednyc_col[i]]], merged_med[[medcoverage_col[j]]])
+    # Add results to the data frame
+    results_df <- rbind(results_df, data.frame(
+      mednyc_col = mednyc_col[i],
+      medcoverage_col = medcoverage_col[j],
+      correlation_coefficient = result$estimate,
+      p_value = result$p.value,
+      confidence_interval_lower = result$conf.int[1],
+      confidence_interval_upper = result$conf.int[2]
+    ))
+  }
+}
+
+results_df <- results_df |>
+  select("mednyc_col", "medcoverage_col", "correlation_coefficient", "p_value")
 
 results_df
 ```
 
-```{r}
+P-values for Rest:
 
+```{r echo = FALSE}
+restresults_df <- data.frame(
+  restnyc_col = character(),
+  restcoverage_col = character(),
+  correlation_coefficient = numeric(),
+  p_value = numeric(),
+  confidence_interval_lower = numeric(),
+  confidence_interval_upper = numeric(),
+  stringsAsFactors = FALSE
+)
 
+# Populate the data frame with results
+for (i in seq_along(restnyc_col)) {
+  for (j in seq_along(restcoverage_col)) {
+    # Calculate correlation coefficient
+    restresult <- cor.test(merged_rest[[restnyc_col[i]]], merged_rest[[restcoverage_col[j]]])
+    # Add results to the data frame
+    restresults_df <- rbind(restresults_df, data.frame(
+      restnyc_col = restnyc_col[i],
+      restcoverage_col = restcoverage_col[j],
+      correlation_coefficient = restresult$estimate,
+      p_value = restresult$p.value,
+      confidence_interval_lower = restresult$conf.int[1],
+      confidence_interval_upper = restresult$conf.int[2]
+    ))
+  }
+}
+
+restresults_df <- restresults_df |>
+  select("restnyc_col", "restcoverage_col", "correlation_coefficient", "p_value")
+
+restresults_df
 ```
 
 ```{r}
