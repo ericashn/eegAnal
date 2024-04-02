@@ -4,23 +4,70 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+```{r, echo = FALSE, results='hide', message = FALSE}
+library(tidyverse)
+library(tidymodels)
+library(dplyr)
+library(stringr)
 ```
 
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
+```{r, echo = FALSE, results='hide'}
+#| label: read-files
+anova <- read.csv("anova_data.csv")
+nyc <- read.csv("nyc_data_scored.csv")
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+```{r, echo = FALSE, results='hide'}
+#|label: anova-wrangle
+
+anova |>
+  group_by(participants)|>
+  count(microstate, condition)|>
+  ungroup()
+
+  # mutate(p = n/sum(n))
+```
+
+```{r, echo = FALSE, results='hide'}
+#| label: wrangle-thenmerge
+anova$participants <- sub("KORU00", "", anova$participants)
+anova$participants <- sub("KORU0", "", anova$participants)
+
+merged = merge(x = anova, y = nyc, by.x = "participants", by.y = "koru_id")
+
+```
+
+```{r, echo = FALSE, results='hide'}
+#| label: filter-nyc
+# nyc_rest = nyc|>
+#   filter(condition)
+
+filtered_med <- grep("_med$|koru_id$", names(nyc), value = TRUE)
+nyc_med <- nyc[, filtered_med]
+
+filtered_rest <- grep("_rest$|koru_id$", names(nyc), value = TRUE)
+nyc_rest <- nyc[, filtered_rest]
+
+med_long <- pivot_longer(nyc_med, cols = -koru_id)
+
+
+# ggplot(med_long, aes(x = name, y = value)) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   labs(title = "Bar Plot of Columns",
+#        x = "Columns", y = "Values") 
+```
+
+everything in nyc
+
+```{r}
+nyc_long <- pivot_longer(nyc, cols = -koru_id)
+
+
+nyc_long$group <- ifelse(grepl("_med$", nyc_long$name), "_med", "_rest")
+
+ggplot(nyc_long, aes(x = name, y = value, fill = group)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Bar Plot of Columns",
+       x = "Columns", y = "Values") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
